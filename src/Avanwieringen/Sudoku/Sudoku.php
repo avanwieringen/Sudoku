@@ -47,6 +47,14 @@ class Sudoku {
         }
         return $this->values[$row][$col];
     }
+    
+    public function getCols() {
+        return self::COLS;
+    }
+    
+    public function getRows() {
+        return self::ROWS;
+    }
 
     public function parseArray(array $values) {
         if (count($values) != self::ROWS || count($values[0]) != self::COLS) {
