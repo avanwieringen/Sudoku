@@ -3,11 +3,14 @@
 require_once('bootstrap.php');
 
 use Avanwieringen\Sudoku\Sudoku;
-use Avanwieringen\Sudoku\Renderers\StringRenderer;
+use Avanwieringen\Sudoku\Renderer\StringRenderer;
+use Avanwieringen\Sudoku\Reader\FileReader;
 
+$reader  = new FileReader();
+$sudokus = $reader->read(__DIR__ . '/sudokus.txt');
+$renderer= new StringRenderer();
 
-$s = new Sudoku();
-$s->setValues(str_repeat('3', 81));
+$sudoku  = $sudokus[4];
 
-$r = new StringRenderer();
-print_r($r->render($s));
+echo $renderer->render($sudoku);
+print_r($sudoku->getSector(8));

@@ -1,6 +1,7 @@
 <?php
 
-namespace Avanwieringen\Sudoku\Renderers;
+namespace Avanwieringen\Sudoku\Renderer;
+use Avanwieringen\Sudoku\Sudoku;
 
 /**
  * Description of String
@@ -9,7 +10,7 @@ namespace Avanwieringen\Sudoku\Renderers;
  */
 class StringRenderer implements RendererInterface {
     
-    public function render(\Avanwieringen\Sudoku\Sudoku $sudoku) {
+    public function render(Sudoku $sudoku) {
         $lines = array();
         foreach($sudoku->getValues() as $rows) {
             $lines[] = str_replace('0', ' ', implode('', $rows));
