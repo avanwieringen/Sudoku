@@ -84,16 +84,73 @@ class Sudoku {
      * @param int $c Column, 0-index
      * @param int|String $v Value to set
      */
-    public function setValue($r, $c, $v) {
+    public function setValue($r, $c, $v) {    
+        $this->values[$this->getIndex($r, $c)] = $this->parseNumber($v);
+    }
+    
+    /** 
+     * Get a specific cell value
+     * @param int $r Row
+     * @param int $c Column
+     * @return int Cell Value 
+     */
+    public function getValue($r, $c) {
+        return $this->values[$this->getIndex($r, $c)];
+    }
+    
+    /**
+     * Return the Sudoku as an array
+     * @return Array Integer array with the Sudoku values
+     */
+    public function toArray() {
+        $values = array(array_fill(0, $this->rows, array_fill(0, $this->cols, 0)));
+        for($i_r = 0; $i_r < $this->rows; $i_r++) {
+            for($i_c = 0; $i_c < $this->cols; $i_c++) {
+                $values[$i_r][$i_c] = $this->getValue($i_r, $i_c);
+            }
+        }
+        return $values;
+    }
+    
+    /** 
+     * Return the number of rows in the Sudoku
+     * @return int 
+     */
+    public function getRows() {
+        return $this->rows;
+    }
+    
+    /** 
+     * Return the number of columns in the Sudoku
+     * @return int 
+     */
+    public function getCols() {
+        return $this->cols;
+    }
+    
+    /** 
+     * Return the number of sectors in the Sudoku
+     * @return int 
+     */
+    public function getSectors() {
+        return $this->secs;
+    }
+    
+    /**
+     * Checks wether or not the row and column indices are valid
+     * @param int $r
+     * @param int $c
+     * @return boolean or an Exception on error 
+     */
+    protected function checkColumnAndRowIndex($r, $c) {
         if(!is_int($r) || !is_int($c)) {
             throw new \InvalidArgumentException('Row and column indices must be integers');
         }
         
         if($r >= $this->rows || $c >= $this->cols) {
-            throw new \OutOfRangeException('Row and column index must be within the range 0..' . ($this->cols - 1));
+            throw new \OutOfRangeException('Row and column index must be within the range 0..' . ($this->maxValue - 1));
         }
-        
-        $this->values[$this->getIndex($r, $c)] = $this->parseNumber($v);
+        return true;
     }
     
     /**
@@ -103,6 +160,7 @@ class Sudoku {
      * @return type 
      */
     protected function getIndex($r, $c) {
+        $this->checkColumnAndRowIndex($r, $c);    
         return ($r*$this->maxValue + $c);
     }
     
@@ -136,4 +194,6 @@ class Sudoku {
         }
         return intval($v);
     }
+    
+    
 }
