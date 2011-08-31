@@ -6,11 +6,6 @@ use Avanwieringen\Sudoku\Sudoku;
 use Avanwieringen\Sudoku\Renderer\StringRenderer;
 use Avanwieringen\Sudoku\Reader\FileReader;
 
-$reader  = new FileReader();
-$sudokus = $reader->read(__DIR__ . '/sudokus.txt');
-$renderer= new StringRenderer();
-
-$sudoku  = $sudokus[4];
-
-echo $renderer->render($sudoku);
-print_r($sudoku->getSector(8));
+$sudoku = new Sudoku(16);
+//$sudoku->setValues(array(0, 1, 2, 3, 4, 2, 3, 2, 3, 4, 2, 3, 2, 1, 0, 1));
+$sudoku->setValues('0123423234232101');

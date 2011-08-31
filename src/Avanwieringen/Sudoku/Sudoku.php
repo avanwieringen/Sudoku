@@ -5,129 +5,107 @@ namespace Avanwieringen\Sudoku;
 use Avanwieringen\Collections\Tools;
 
 class Sudoku {
-    const ROWS = 9;
-    const COLS = 9;
-
-    private $values = array();
-
-    public function __construct($values = null) {
-        if(is_null($values)) {
-           $this->setValues(Tools::generate(self::ROWS, Tools::generate(self::COLS, 0)));
-        } elseif(is_array($values)) {
-            $this->parseArray($values);
-        } else {
-            $this->parseString($values);
-        }
+    
+    /**
+     * Values of the Sudoku with '0','.' or ' ' being an empty cell
+     * @var int 
+     */
+    private $values;
+    
+    /**
+     * Number of columns in the Sudoku
+     * @var int 
+     */
+    private $cols;
+    
+    /**
+     * Number of rows in the Sudoku
+     * @var int
+     */
+    private $rows;
+    
+    /**
+     * Number of sectors in the Sudoku
+     * @var int
+     */
+    private $secs;
+    
+    /** 
+     * Maximum value of a cell
+     * @var int 
+     */
+    private $maxValue;
+    
+    /**
+     * Initializes Sudoku with a specific size
+     * @param int $size 
+     */
+    public function __construct($size = 81) {
+        // check if $size is square and dimensions are power of 2
+        $dim     = pow($size, 0.25);
+        if($dim !== floor($dim)) {
+            throw new \InvalidArgumentException('$size^(1/4) must be an integer');
+        }   
+        $this->values   = array_fill(0, $size, 0);
+        $this->cols     = sqrt($size);
+        $this->rows     = sqrt($size);
+        $this->secs     = sqrt($size);
+        $this->maxValue = sqrt($size);
+        
+        $this->setValues(array_fill(0, $size, 0));
     }
-
-    public function getValues() {
-        return $this->values;
-    }
-
+    
+    /**
+     * Sets the values of the Sudoku with '0','.' or ' ' being an empty cell
+     * @param String|Array $values 
+     */
     public function setValues($values) {
-        if (is_array($values)) {
-           $this->parseArray($values); 
+        if(is_array($values)) {
+            $maxVal = $this->maxValue;
+            if(count($values)!== count($this->values)) {
+                throw new \InvalidArgumentException(sprintf('$values must either be a string or an array consisting of %d characters or integers', count($this->values)));
+            } //elseif(count(array_filter($values, function($v) use ($maxVal) { return (is_int($v) && ($v >= 0) && ($v <= $maxVal)); })) !== count($this->values)) {
+                elseif(count(array_filter($values, array($this,'isValidNumber'))) !== count($this->values)) {
+               throw new \InvalidArgumentException(sprintf('Every value in $values should be an integer between 0 and %d', $this->maxValue)); 
+            }            
+            $this->values = $values;
         } elseif(is_string($values)) {
-            $this->parseString($values);
-        } else {
-           throw new \InvalidArgumentException(sprintf('Values must be a %dx%d integer array or a string consisting of %d numbers', self::ROWS, self::COLS, self::ROWS * self::COLS)); 
+            if(strlen($values)!== count($this->values)) {
+                throw new \InvalidArgumentException(sprintf('$values must either be a string or an array consisting of %d characters or integers', count($this->values)));
+            }            
+            $values = array_map(array($this,'parseNumber'), str_split($values));
+            $this->values = $values;
         }
     }
     
-    public function setValue($row, $col, $value) {
-        if($row >= self::ROWS) {
-            throw new \OutOfRangeException(sprintf('Row index (%d) exceeds dimensions [0 - %d]', $row, self::ROWS - 1));
-        } elseif($col >= self::COLS) {
-            throw new \OutOfRangeException(sprintf('Column index (%d) exceeds dimensions [0 - %d]', $col, self::COLS - 1));
-        } elseif(!is_int($value)) {
-            throw new \InvalidArgumentException(sprintf('Value %s is not an integer', $value));
-        }
-        $this->values[$row][$col] = $value;
-    }
-    
-    public function getValue($row, $col) {
-        if($row >= self::ROWS) {
-            throw new \OutOfRangeException(sprintf('Row index (%d) exceeds dimensions [0 - %d]', $row, self::ROWS - 1));
-        } elseif($col >= self::COLS) {
-            throw new \OutOfRangeException(sprintf('Column index (%d) exceeds dimensions [0 - %d]', $col, self::COLS - 1));
-        }
-        return $this->values[$row][$col];
-    }
-    
-    public function getNumCols() {
-        return self::COLS;
-    }
-    
-    public function getNumRows() {
-        return self::ROWS;
-    }
-
-    public function parseArray(array $values) {
-        if (count($values) != self::ROWS || count($values[0]) != self::COLS) {
-            throw new \InvalidArgumentException(sprintf('Values must be a %dx%d integer array', self::ROWS, self::COLS));
-        }
-    }
-    
-    public function parseString($values) {
-        if(strlen($values) != (self::COLS * self::ROWS)) {
-            throw new \InvalidArgumentException(sprintf('Values must be a string consisting of %d numbers', self::ROWS * self::COLS));
-        }
-        
-        $chars = str_split($values);
-        foreach($chars as $i => $char) {
-            $r = floor($i / self::COLS);
-            $c = ($i - $r*self::ROWS);
+    /**
+     * Internal function to check if a variable is a valid Sudoku cell value
+     * @param String|int $v
+     * @return Boolean 
+     */
+    protected function isValidNumber($v) {
+        $empty = array('0','.',' ');
+        if(is_string($v) || is_int($v)) {
+            if(in_array($v, $empty)) {
+                return true;
+            }
             
-            if(!is_numeric($char)) {
-                $char = 0;
-            }
-            $this->setValue($r, $c, (int)$char);
-        }
-    }
-    
-    public function getRow($index) {
-        if(!is_numeric($index)) {
-            throw new \InvalidArgumentException('Index is not an integer');
-        } elseif($index < 0 || $index > (self::ROWS - 1)) {
-            throw new \OutOfRangeException(sprintf('Row index (%d) exceeds dimensions [0 - %d]', $col, self::ROWS - 1));
-        }        
-        return $this->values[$index];
-    }
-    
-    public function getColumn($index) {
-        if(!is_numeric($index)) {
-            throw new \InvalidArgumentException('Index is not an integer');
-        } elseif($index < 0 || $index > (self::COLS - 1)) {
-            throw new \OutOfRangeException(sprintf('Row index (%d) exceeds dimensions [0 - %d]', $col, self::COLS - 1));
-        }
-        $col = array();
-        foreach($this->values as $row) {
-            $col[] = $row[$index];
-        }
-        return $col;
-    }
-    
-    public function getSector($index) {
-        if(!is_numeric($index)) {
-            throw new \InvalidArgumentException('Index is not an integer');
-        } elseif($index < 0 || $index > (self::COLS - 1)) {
-            throw new \OutOfRangeException(sprintf('Sector index (%d) exceeds dimensions [0 - %d]', $col, self::ROWS - 1));
-        }
-        
-        $vals = array();
-        for($r = floor($index /sqrt(self::ROWS)) * sqrt(self::ROWS); $r < (floor($index/sqrt(self::ROWS)) + 1) * sqrt(self::ROWS); $r++) {
-            for($c = $index%sqrt(self::COLS) * sqrt(self::COLS); $c < ($index%sqrt(self::COLS) + 1) * sqrt(self::COLS);  $c++) {
-                $vals[] = $this->getValue($r, $c);
+            if(intval($v) > 0 && intval($v) <= $this->maxValue) {
+                return true;
             }
         }
-        return $vals;
+        return false;
     }
     
-    public function isValid() {
-        
-    }
-    
-    public function isSolved() {
-        
+    /**
+     *  Internal function to parse a variable as a suitable Sudoky cell value
+     * @param String|int $v
+     * @return int 
+     */    
+    protected function parseNumber(&$v) {
+        if(!$this->isValidNumber($v)) {
+            throw new \InvalidArgumentException(sprintf("Value must be a String or an integer within the range 0..%d. '%s' given.", $this->maxValue, $v));
+        }
+        return intval($v);
     }
 }
