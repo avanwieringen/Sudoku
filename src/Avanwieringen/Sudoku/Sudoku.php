@@ -38,7 +38,7 @@ class Sudoku {
     
     /**
      * Initializes Sudoku with a specific size
-     * @param int $size 
+     * @param int $size Size
      */
     public function __construct($size = 81) {
         // check if $size is square and dimensions are power of 2
@@ -57,7 +57,7 @@ class Sudoku {
     
     /**
      * Sets the values of the Sudoku with '0','.' or ' ' being an empty cell
-     * @param String|Array $values 
+     * @param String|Array $values Values
      */
     public function setValues($values) {
         if(is_array($values)) {
@@ -79,8 +79,36 @@ class Sudoku {
     }
     
     /**
+     * Sets the value of a specific Sudoku cell
+     * @param int $r Row, 0-index
+     * @param int $c Column, 0-index
+     * @param int|String $v Value to set
+     */
+    public function setValue($r, $c, $v) {
+        if(!is_int($r) || !is_int($c)) {
+            throw new \InvalidArgumentException('Row and column indices must be integers');
+        }
+        
+        if($r >= $this->rows || $c >= $this->cols) {
+            throw new \OutOfRangeException('Row and column index must be within the range 0..' . ($this->cols - 1));
+        }
+        
+        $this->values[$this->getIndex($r, $c)] = $this->parseNumber($v);
+    }
+    
+    /**
+     * Return the index in the 1-dim array belonging to a column and row index
+     * @param int $r Row
+     * @param int $c Columnn
+     * @return type 
+     */
+    protected function getIndex($r, $c) {
+        return ($r*$this->maxValue + $c);
+    }
+    
+    /**
      * Internal function to check if a variable is a valid Sudoku cell value
-     * @param String|int $v
+     * @param String|int $v Value
      * @return Boolean 
      */
     protected function isValidNumber($v) {
@@ -98,7 +126,7 @@ class Sudoku {
     }
     
     /**
-     *  Internal function to parse a variable as a suitable Sudoky cell value
+     * Internal function to parse a variable as a suitable Sudoky cell value
      * @param String|int $v
      * @return int 
      */    
