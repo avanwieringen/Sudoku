@@ -200,8 +200,50 @@ class Sudoku {
      * @return boolean
      */
     public function isValidCell($r, $c) {
-        if($this->getValue($r, $c) == 0) return true;        
+        if(!$this->isFilledCell($r, $c)) return true;      
         
+        
+    }
+    
+    /**
+     * Checks if cell is filled, not if it is valid
+     * @param int $r
+     * @param int $c
+     * @return boolean 
+     */
+    public function isFilledCell($r, $c) {
+        return $this->getValue($r, $c) == 0;
+    }
+    
+    /**
+     * Returns the choices of a cell
+     * @param type $r
+     * @param type $c 
+     * @return Array
+     */
+    public function getChoices($r, $c) {
+        $choices = array();
+        if($this->isFilledCell($r, $c)) return $choices;
+        
+        $row = $this->getRow($r);
+        $col = $this->getColumn($c);
+        $sec = $this->getSectorFromRowCol($r, $c);
+        return array_intersect(array_intersect($row, $col), $sec);
+    }
+    
+    /**
+     * Returns whether or not a cell has any choices left
+     * @param int $r
+     * @param int $c
+     * @return boolean 
+     */
+    public function hasChoices($r, $c) {
+        return count($this->getChoices($r, $c)) > 0;
+    }
+    
+    protected function filterValues($input) {
+        $input = array_filter($input, function($v) { return $v > 0; });
+        return array_diff(range(1, $this->maxValue), $input);
     }
     
     /**
@@ -231,7 +273,16 @@ class Sudoku {
         $r = $this->getRowFromIndex($index);
         $c = $this->getColumnFromIndex($index);        
         return (floor($r / sqrt($this->rows))*sqrt($this->rows) + floor($c / sqrt($this->cols)));
-        
+    }
+    
+    /**
+     * Returns the sectornumber from rows and columns
+     * @param int $r
+     * @param int $c
+     * @return int 
+     */
+    protected function getSectorFromRowCol($r, $c) {
+        return $this->getSectorFromIndex($this->getIndex($r, $c));
     }
     
     /**
