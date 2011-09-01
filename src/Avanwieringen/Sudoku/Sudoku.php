@@ -116,7 +116,7 @@ class Sudoku {
      * Return the number of rows in the Sudoku
      * @return int 
      */
-    public function getRows() {
+    public function getRowCount() {
         return $this->rows;
     }
     
@@ -124,7 +124,7 @@ class Sudoku {
      * Return the number of columns in the Sudoku
      * @return int 
      */
-    public function getCols() {
+    public function getColumnCount() {
         return $this->cols;
     }
     
@@ -132,8 +132,106 @@ class Sudoku {
      * Return the number of sectors in the Sudoku
      * @return int 
      */
-    public function getSectors() {
+    public function getSectorCount() {
         return $this->secs;
+    }
+    
+    /**
+     * Get values of a row
+     * @param int $r 
+     * @return Array
+     */
+    public function getRow($r) {
+        $values = array();
+        for($i_c = 0; $i_c < $this->cols; $i_c++) {
+            $values[] = $this->getValue($r, $i_c);
+        }
+        return $values;
+    }
+    
+    /**
+     * Get values of a column
+     * @param int $c 
+     * @return Array
+     */
+    public function getColumn($c) {
+        $values = array();
+        for($i_r = 0; $i_r < $this->rows; $i_r++) {
+            $values[] = $this->getValue($i_r, $c);
+        }
+        return $values;
+    }
+        
+    /**
+     * Get values of a sector
+     * @param int $s
+     * @return Array 
+     */
+    public function getSector($s) {
+        if(!is_int($s)) {
+            throw new \InvalidArgumentException('Index is not an integer');
+        } elseif($s < 0 || $s > ($this->secs - 1)) {
+            throw new \OutOfBoundsException(sprintf('$s should be between 0 and %d', $this->secs -1));
+        }
+        
+        $vals = array();
+        for($r = floor($s /sqrt($this->rows)) * sqrt($this->rows); $r < (floor($s/sqrt($this->rows)) + 1) * sqrt($this->rows); $r++) {
+            for($c = $s%sqrt($this->cols) * sqrt($this->cols); $c < ($s%sqrt($this->cols) + 1) * sqrt($this->cols);  $c++) {
+                $vals[] = $this->getValue($r, $c);
+            }
+        }
+        return $vals;
+    }
+    
+    /**
+     * Checks wether or not the Sudoku is valid
+     * @return boolean
+     */
+    public function isValid() {
+        foreach($this->values as $i => $v) {
+            
+        }
+    }
+    
+    /** 
+     * Checks wether or not a cell is valid
+     * @param int $r
+     * @param int $c 
+     * @return boolean
+     */
+    public function isValidCell($r, $c) {
+        if($this->getValue($r, $c) == 0) return true;        
+        
+    }
+    
+    /**
+     * Returns the rownumber from the 1-dim index
+     * @param int $index
+     * @return int 
+     */
+    protected function getRowFromIndex($index) {
+        return floor($index / $this->cols);
+    }
+    
+    /**
+     * Returns the columnnumber from the 1-dim index
+     * @param int $index
+     * @return int 
+     */
+    protected function getColumnFromIndex($index) {
+        return $index%$this->cols;
+    }
+    
+    /**
+     * Returns the sectornumber from the 1-dim index
+     * @param int $index
+     * @return int 
+     */
+    protected function getSectorFromIndex($index) {
+        $r = $this->getRowFromIndex($index);
+        $c = $this->getColumnFromIndex($index);        
+        return (floor($r / sqrt($this->rows))*sqrt($this->rows) + floor($c / sqrt($this->cols)));
+        
     }
     
     /**
