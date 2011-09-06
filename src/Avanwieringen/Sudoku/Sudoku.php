@@ -215,7 +215,7 @@ class Sudoku {
     }
     
     /**
-     * Checks wether or not the Sudoku is valid
+     * Checks wether or not the Sudoku is solvable
      * @return boolean
      */
     public function isSolvable() {
