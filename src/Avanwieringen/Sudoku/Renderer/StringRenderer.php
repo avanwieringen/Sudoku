@@ -13,7 +13,7 @@ class StringRenderer implements RendererInterface {
     public function render(Sudoku $sudoku) {
         $lines = array();
         foreach($sudoku->toArray() as $rows) {
-            $lines[] = str_replace('0', ' ', implode('', $rows));
+            $lines[] = str_replace('0', '*', implode('', $rows));
         }
         return implode("\n", $lines);
     }

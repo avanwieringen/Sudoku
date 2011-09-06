@@ -8,7 +8,7 @@ class Sudoku {
     
     /**
      * Values of the Sudoku with '0','.' or ' ' being an empty cell
-     * @var int 
+     * @var String 
      */
     private $values;
     
@@ -30,6 +30,12 @@ class Sudoku {
      */
     private $secs;
     
+    /**
+     * Number of cells in the Sudoku
+     * @var int 
+     */
+    private $cells;
+    
     /** 
      * Maximum value of a cell
      * @var int 
@@ -38,10 +44,10 @@ class Sudoku {
     
     /**
      * Initializes Sudoku with a specific size
-     * @param int $size Size
+     * @param Array|String $values An array of values or a string of values
      */
-    public function __construct($size = 81) {
-        // check if $size is square and dimensions are power of 2
+    public function __construct($values = array()) {
+        /** check if $size is square and dimensions are power of 2
         $dim     = pow($size, 0.25);
         if($dim !== floor($dim)) {
             throw new \InvalidArgumentException('$size^(1/4) must be an integer');
@@ -52,6 +58,31 @@ class Sudoku {
         $this->secs     = sqrt($size);
         $this->maxValue = sqrt($size);
         
+        $this->setValues(array_fill(0, $size, 0));**/
+        
+        if(is_array($values) && count($values) == 0) {
+            $values = array_fill(0, 81, 0);
+        } 
+        $count = is_array($values) ? count($values) : strlen($values);
+        $this->setSize($count);
+        $this->setValues($values);
+    }
+    
+    /**
+     * Sets the size of the Sudoku. The Sudoku is cleared.
+     * @param int $size 
+     */
+    public function setSize($size = 81) {
+        $dim     = pow($size, 0.25);
+        if($dim !== floor($dim)) {
+            throw new \InvalidArgumentException('$size^(1/4) must be an integer');
+        }
+        
+        $this->cols     = sqrt($size);
+        $this->rows     = sqrt($size);
+        $this->secs     = sqrt($size);
+        $this->maxValue = sqrt($size);    
+        $this->cells    = $size;
         $this->setValues(array_fill(0, $size, 0));
     }
     
@@ -62,16 +93,16 @@ class Sudoku {
     public function setValues($values) {
         if(is_array($values)) {
             $maxVal = $this->maxValue;
-            if(count($values)!== count($this->values)) {
-                throw new \InvalidArgumentException(sprintf('$values must either be a string or an array consisting of %d characters or integers', count($this->values)));
+            if(count($values)!== $this->cells) {
+                throw new \InvalidArgumentException(sprintf('$values must either be a string or an array consisting of %d characters or integers', $this->cells));
             } //elseif(count(array_filter($values, function($v) use ($maxVal) { return (is_int($v) && ($v >= 0) && ($v <= $maxVal)); })) !== count($this->values)) {
-                elseif(count(array_filter($values, array($this,'isValidNumber'))) !== count($this->values)) {
+                elseif(count(array_filter($values, array($this,'isValidNumber'))) !== $this->cells) {
                throw new \InvalidArgumentException(sprintf('Every value in $values should be an integer between 0 and %d', $this->maxValue)); 
             }            
             $this->values = $values;
         } elseif(is_string($values)) {
-            if(strlen($values)!== count($this->values)) {
-                throw new \InvalidArgumentException(sprintf('$values must either be a string or an array consisting of %d characters or integers', count($this->values)));
+            if(strlen($values)!== $this->cells) {
+                throw new \InvalidArgumentException(sprintf('$values must either be a string or an array consisting of %d characters or integers', $this->cells));
             }            
             $values = array_map(array($this,'parseNumber'), str_split($values));
             $this->values = $values;
@@ -168,12 +199,12 @@ class Sudoku {
      * @return Array 
      */
     public function getSector($s) {
-        if(!is_int($s)) {
+        if(!is_numeric($s))  {
             throw new \InvalidArgumentException('Index is not an integer');
         } elseif($s < 0 || $s > ($this->secs - 1)) {
             throw new \OutOfBoundsException(sprintf('$s should be between 0 and %d', $this->secs -1));
         }
-        
+        $s = intval($s);        
         $vals = array();
         for($r = floor($s /sqrt($this->rows)) * sqrt($this->rows); $r < (floor($s/sqrt($this->rows)) + 1) * sqrt($this->rows); $r++) {
             for($c = $s%sqrt($this->cols) * sqrt($this->cols); $c < ($s%sqrt($this->cols) + 1) * sqrt($this->cols);  $c++) {
@@ -187,10 +218,20 @@ class Sudoku {
      * Checks wether or not the Sudoku is valid
      * @return boolean
      */
-    public function isValid() {
+    public function isSolvable() {
+        if($this->isSolved()) return true;
         foreach($this->values as $i => $v) {
-            
+            if(!$this->isValidCell($this->getRowFromIndex($i), $this->getColumnFromIndex($i))) return false;
         }
+        return true;
+    }
+    
+    /**
+     * Checks wether or not the Sudoky is solved
+     * @return boolean 
+     */
+    public function isSolved() {
+        return count(array_filter($this->values)) == count($this->values);
     }
     
     /** 
@@ -200,9 +241,8 @@ class Sudoku {
      * @return boolean
      */
     public function isValidCell($r, $c) {
-        if(!$this->isFilledCell($r, $c)) return true;      
-        
-        
+        if($this->isFilledCell($r, $c)) return true;      
+        return count($this->getChoices($r, $c)) != 0;        
     }
     
     /**
@@ -212,7 +252,7 @@ class Sudoku {
      * @return boolean 
      */
     public function isFilledCell($r, $c) {
-        return $this->getValue($r, $c) == 0;
+        return !$this->getValue($r, $c) == 0;
     }
     
     /**
@@ -223,12 +263,12 @@ class Sudoku {
      */
     public function getChoices($r, $c) {
         $choices = array();
-        if($this->isFilledCell($r, $c)) return $choices;
-        
-        $row = $this->getRow($r);
-        $col = $this->getColumn($c);
-        $sec = $this->getSectorFromRowCol($r, $c);
-        return array_intersect(array_intersect($row, $col), $sec);
+        if($this->isFilledCell($r, $c)) return $choices;        
+        $vals = array_unique(array_filter(array_merge($this->getRow($r), $this->getColumn($c), $this->getSectorFromRowCol($r, $c))));
+        sort($vals);
+      
+        $vals = array_diff(range(1, $this->maxValue), $vals);
+        return $vals;
     }
     
     /**
@@ -271,8 +311,8 @@ class Sudoku {
      */
     protected function getSectorFromIndex($index) {
         $r = $this->getRowFromIndex($index);
-        $c = $this->getColumnFromIndex($index);        
-        return (floor($r / sqrt($this->rows))*sqrt($this->rows) + floor($c / sqrt($this->cols)));
+        $c = $this->getColumnFromIndex($index);  
+        return $this->getSector((floor($r / sqrt($this->rows))*sqrt($this->rows) + floor($c / sqrt($this->cols))));
     }
     
     /**
@@ -292,7 +332,7 @@ class Sudoku {
      * @return boolean or an Exception on error 
      */
     protected function checkColumnAndRowIndex($r, $c) {
-        if(!is_int($r) || !is_int($c)) {
+        if(!is_numeric($r) || !is_numeric($c)) {
             throw new \InvalidArgumentException('Row and column indices must be integers');
         }
         
