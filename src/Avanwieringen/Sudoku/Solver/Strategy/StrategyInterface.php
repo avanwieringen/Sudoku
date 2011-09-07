@@ -11,9 +11,15 @@ interface StrategyInterface {
     public function setSudoku(Sudoku $s);
     
     /**
-     * Perform the next solver step. Returns a Sudoku or false on failure
+     * Perform the next solver step. Returns a an array with the step (row, column, value)
+     * @param int The next step chosen, follows from getPossibleSteps
      * @return mixed;
      */
-    public function nextStep();
+    public function getNextStep($stepChoice);
+    
+    /**
+     * Get the amount of possible steps to be taken
+     */
+    public function getPossibleSteps();
     
 }
