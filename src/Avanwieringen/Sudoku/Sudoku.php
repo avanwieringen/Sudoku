@@ -267,7 +267,7 @@ class Sudoku {
         $vals = array_unique(array_filter(array_merge($this->getRow($r), $this->getColumn($c), $this->getSectorFromRowCol($r, $c))));
         sort($vals);
       
-        $vals = array_diff(range(1, $this->maxValue), $vals);
+        $vals = array_values(array_diff(range(1, $this->maxValue), $vals));
         return $vals;
     }
     
@@ -360,7 +360,7 @@ class Sudoku {
      */
     protected function isValidNumber($v) {
         $empty = array('0','.',' ');
-        if(is_string($v) || is_int($v)) {
+        if(is_string($v) || is_numeric($v)) {
             if(in_array($v, $empty)) {
                 return true;
             }

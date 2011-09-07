@@ -5,10 +5,15 @@ require_once('bootstrap.php');
 use Avanwieringen\Sudoku\Sudoku;
 use Avanwieringen\Sudoku\Renderer\StringRenderer;
 use Avanwieringen\Sudoku\Reader\FileReader;
+use Avanwieringen\Sudoku\Solver\Solver;
 
-$sudoku = new Sudoku('6.....8.3.4.7.................5.4.7.3..2.....1.6.......2.....5.....8.6......1....');
+use Avanwieringen\Sudoku\Solver\Strategy\SimpleLogic;
+
+$sudoku = new Sudoku('800005216045862007670009500769204030020001765001670009004096800907400601306107940');
 
 $renderer = new StringRenderer();
 echo $renderer->render($sudoku) . "\n\n";
 
-var_dump($sudoku->isSolvable());
+$solver   = new Solver(array(new SimpleLogic()));
+echo $renderer->render($solver->solve($sudoku))  . "\n\n";
+echo $renderer->render($sudoku);
