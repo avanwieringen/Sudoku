@@ -10,8 +10,8 @@ use Avanwieringen\Sudoku\Solver\Solver;
 use Avanwieringen\Sudoku\Solver\Strategy\SimpleLogicStrategy;
 use Avanwieringen\Sudoku\Solver\Strategy\BruteForceStrategy;
 
-$sudoku = new Sudoku('800005216045862007670009500769204030020001765001670009004096800907400601306107940');
-//$sudoku = new Sudoku('..84...3....3.....9....157479...8........7..514.....2...9.6...2.5....4......9..56');
+//$sudoku = new Sudoku('800005216045862007670009500769204030020001765001670009004096800907400601306107940');
+$sudoku = new Sudoku('.47.8...1............6..7..6....357......5....1..6....28..4.....9.1...4.....2.69.');
 
 $renderer = new StringRenderer();
 echo $renderer->render($sudoku) . "\n\n";

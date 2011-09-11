@@ -240,8 +240,25 @@ class Sudoku {
      * @param int $c 
      * @return boolean
      */
-    public function isValidCell($r, $c) {
-        if($this->isFilledCell($r, $c)) return true;      
+    public function isValidCell($r, $c) {        
+        if($this->isFilledCell($r, $c)) {
+            $value = $this->getValue($r, $c);
+            
+            $count_values = function($array) use ($value) {  
+                $count = 0;
+                foreach($array as $val) {
+                    if($val == $value) $count++;
+                }
+                return $count;
+            };
+            
+            if($count_values($this->getSectorFromRowCol($r, $c)) > 1 ||
+               $count_values($this->getRow($r)) > 1 ||
+               $count_values($this->getColumn($c)) > 1) {
+                return false;
+            }
+            return true;
+        }   
         return count($this->getChoices($r, $c)) != 0;        
     }
     
@@ -319,7 +336,7 @@ class Sudoku {
      * Returns the sectornumber from rows and columns
      * @param int $r
      * @param int $c
-     * @return int 
+     * @return array 
      */
     protected function getSectorFromRowCol($r, $c) {
         return $this->getSectorFromIndex($this->getIndex($r, $c));
