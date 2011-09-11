@@ -8,9 +8,15 @@ class Solver {
     
     /**
      * Array of Solver Strategies
-     * @var Array 
+     * @var array 
      */
     private $strategies = array();
+    
+    /** 
+     * Tree-structure of all Sudokus
+     * @var array
+     */
+    private $solverTree = array();
     
     /**
      * Construct a solver with a strategy or an array of strategies, executed in that order
@@ -42,33 +48,7 @@ class Solver {
     public function solve(Sudoku $s) {
         if(count($this->strategies) == 0) throw new SolverException("No solverstrategies added");        
         
-        for($i_s = 0; $i_s < count($this->strategies); $i_s++) {
-            /* @var $strategy StrategyInterface */
-            $strategy = clone $this->strategies[$i_s];        
-            $strategy->setSudoku($s);
-
-            $choices = $strategy->getPossibleSteps();
-            for($i_c = 0; $i_c < $choices; $i_c++) {
-                $step = $strategy->getNextStep($i_c);
-
-                /* @var $ns Sudoku */
-                $ns   = clone $s;
-                $ns->setValue($step[0], $step[1], $step[2]);
-
-                // is the sudoku solved or solveable?
-                if(!$ns->isSolvable() || $ns->isSolved()) { 
-                    return $ns;
-                }            
-
-                $childResult = $this->solve($ns);
-                if(!$childResult->isSolvable()) {
-                    $ns = $childResult;
-                } elseif($childResult->isSolved()) {
-                    return $childResult;
-                }
-            }
-        }
-        return $ns;
+        
     }
 }
 
