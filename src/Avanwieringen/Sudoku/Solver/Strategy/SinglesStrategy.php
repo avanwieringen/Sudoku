@@ -4,7 +4,7 @@ namespace Avanwieringen\Sudoku\Solver\Strategy;
 
 use Avanwieringen\Sudoku\Sudoku;
 
-class SimpleLogicStrategy implements StrategyInterface {
+class SinglesStrategy implements StrategyInterface {
     
     public function solve(Sudoku $s) {
         $possiblities = array();
