@@ -220,9 +220,14 @@ class Sudoku {
      */
     public function isSolvable() {
         if($this->isSolved()) return true;
-        foreach($this->values as $i => $v) {
+        /*foreach($this->values as $i => $v) {
             if(!$this->isValidCell($this->getRowFromIndex($i), $this->getColumnFromIndex($i))) return false;
-        }
+        }*/
+        for($r = 0; $r < $this->getRowCount(); $r++) {
+            for($c = 0; $c < $this->getColumnCount(); $c++) {
+                if(!$this->isValidCell($r, $c)) return false;
+            }
+        }  
         return true;
     }
     

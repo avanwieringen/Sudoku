@@ -1,6 +1,6 @@
-[submodule "vendor/Symfony/ClassLoader"]
-	path = vendor/Symfony/ClassLoader
-	url = git@github.com:symfony/ClassLoader.git
-[submodule "vendor/Symfony/EventDispatcher"]
-	path = vendor/Symfony/EventDispatcher
+[submodule "vendor/Symfony/Component/EventDispatcher"]
+	path = vendor/Symfony/Component/EventDispatcher
 	url = git@github.com:symfony/EventDispatcher.git
+[submodule "vendor/Symfony/Component/ClassLoader"]
+	path = vendor/Symfony/Component/ClassLoader
+	url = git@github.com:symfony/ClassLoader.git

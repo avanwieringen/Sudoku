@@ -3,6 +3,11 @@
 namespace Avanwieringen\Sudoku\Solver;
 use Avanwieringen\Sudoku\Sudoku;
 use Avanwieringen\Sudoku\Solver\Strategy\StrategyInterface;
+use Avanwieringen\Sudoku\Solver\SolverResult;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Avanwieringen\Sudoku\Solver\Event\IterationEvent;
+use Avanwieringen\Sudoku\Solver\Event\IterationDoneEvent;
+use Avanwieringen\Benchmark\Benchmarker as Bench;
 
 class Solver {
     
@@ -12,11 +17,7 @@ class Solver {
      */
     private $strategies = array();
     
-    /** 
-     * Tree-structure of all Sudokus
-     * @var array
-     */
-    private $solverTree = array();
+    private $dispatcher;
     
     /**
      * Construct a solver with a strategy or an array of strategies, executed in that order
@@ -30,6 +31,8 @@ class Solver {
         } elseif($strategies instanceof StrategyInterface) {
             $this->addStrategy($strategies);
         }
+        
+        $this->dispatcher = new EventDispatcher();
     }
     
     /**
@@ -43,32 +46,52 @@ class Solver {
     /**
      * Solve a Sudoku
      * @param Sudoku $s 
-     * @return Sudoku
+     * @return SolverResult
      */
-    public function solve(Sudoku $s, $parent = null, $level = 0) {
-        if(count($this->strategies) == 0) throw new SolverException("No solverstrategies added");        
+    public function solve(Sudoku $s) {
+        if(count($this->strategies) == 0) throw new SolverException("No solverstrategies added");      
         
-        if(is_null($parent)) {
-            $parent = 0;
-            $this->appendSolverTree($s);
-        }
+        if(!$s->isSolvable()) return new SolverResult($s, SolverResult::UNSOLVABLE);
+        if($s->isSolved()) return new SolverResult($s, SolverResult::SOLVED);
         
-        $ret = clone $s;
-        
-        /* Make solver routine */
-        
-        return $ret;
+        return $this->iterate($s);
+    }
+    
+    public function onIterate($listener) {
+        $this->dispatcher->addListener('sudoku.solver.iteration', $listener);
+    }
+    
+    public function onIterationDone($listener) {
+        $this->dispatcher->addListener('sudoku.solver.iteration.done', $listener);
     }
     
     /**
-     * Appends a Sudoku to the solver tree
-     * @param Sudoku $s
-     * @return int Index 
+     * Iteration of the solver loop
+     * @param Sudoku $s 
+     * @return SolverResult Result
      */
-    private function appendSolverTree(Sudoku $s, $parent = null) {
-        $index = count($this->solverTree);
-        $this->solverTree[$index] = array('sudoku' => $s, 'solved' => $s->isSolved(), 'solvable' => $s->isSolvable(), 'parent' => $parent);
-        return $index;
+    protected function iterate(Sudoku $s, $level = 0) {
+        //echo "Trying to solve " . md5(serialize($s->toArray()));        
+        foreach($this->strategies as $strategy) { 
+            $this->dispatcher->dispatch('sudoku.solver.iteration', new IterationEvent($s, $strategy, $level));            
+            /* @var $strategy StrategyInterface */            
+            
+            
+            Bench::start('solver');
+            $solutions = $strategy->solve($s);         
+            $this->dispatcher->dispatch('sudoku.solver.iteration.done', new IterationDoneEvent(Bench::stop('solver')));
+            if(count($solutions) > 0) {                
+                foreach($solutions as $solution) {
+                    /* @var $solution Sudoku */
+                    if($solution->isSolved()) return new SolverResult($solution, SolverResult::SOLVED);
+                    if($solution->isSolvable()) {
+                        $childSolution = $this->iterate($solution, $level + 1);
+                        if($childSolution->getResult()===SolverResult::SOLVED ) return $childSolution;
+                    }
+                }                
+            }
+        }  
+        return new SolverResult($s, SolverResult::UNSOLVABLE);
     }
 }
 
