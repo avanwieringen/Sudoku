@@ -70,8 +70,7 @@ class Solver {
      * @param Sudoku $s 
      * @return SolverResult Result
      */
-    protected function iterate(Sudoku $s, $level = 0) {
-        //echo "Trying to solve " . md5(serialize($s->toArray()));        
+    protected function iterate(Sudoku $s, $level = 0) {       
         foreach($this->strategies as $strategy) { 
             $this->dispatcher->dispatch('sudoku.solver.iteration', new IterationEvent($s, $strategy, $level));            
             /* @var $strategy StrategyInterface */            
